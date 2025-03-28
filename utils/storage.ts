@@ -22,3 +22,14 @@ export async function getTransactions() {
     return [];
   }
 }
+
+export async function deleteTransaction(id: string) {
+  try {
+    const json = await AsyncStorage.getItem(STORAGE_KEY);
+    const data = json ? JSON.parse(json) : [];
+    const updated = data.filter((tx: any) => tx.id !== id);
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Błąd usuwania transakcji:', err);
+  }
+}

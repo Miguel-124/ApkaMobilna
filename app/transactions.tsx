@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { getTransactions } from '../utils/storage';
+import { View, Text, FlatList, StyleSheet, Alert, Pressable } from 'react-native';
+import { getTransactions, deleteTransaction } from '../utils/storage';
 
 type Transaction = {
   id: string;
@@ -14,18 +14,36 @@ export default function TransactionsScreen() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
-    const load = async () => {
-      const data = await getTransactions();
-      setTransactions(data.reverse());
-    };
-
-    load(); // nie musisz robić unsubscribe, bo to nie jest subskrypcja
+    load();
   }, []);
+
+  const load = async () => {
+    const data = await getTransactions();
+    setTransactions(data.reverse());
+  };
+
+  const handleDelete = (id: string) => {
+    Alert.alert(
+      'Usuń transakcję',
+      'Czy na pewno chcesz usunąć tę transakcję?',
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: 'Usuń',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteTransaction(id);
+            load(); // odśwież listę
+          },
+        },
+      ]
+    );
+  };
 
   if (transactions.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Brak transakcji 😕</Text>
+        <Text style={styles.title}>Brak transakcji</Text>
       </View>
     );
   }
@@ -37,11 +55,14 @@ export default function TransactionsScreen() {
         data={transactions}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <Pressable
+            onLongPress={() => handleDelete(item.id)}
+            style={styles.card}
+          >
             <Text style={styles.ticker}>{item.ticker}</Text>
-            <Text>{item.shares} szt. @ ${item.price}</Text>
+            <Text style={styles.text}>{item.shares} szt. @ ${item.price}</Text>
             <Text style={styles.date}>{item.date}</Text>
-          </View>
+          </Pressable>
         )}
       />
     </View>
@@ -49,14 +70,15 @@ export default function TransactionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
+  container: { flex: 1, padding: 24, backgroundColor: '#121212' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: '#ffffff' },
   card: {
     padding: 12,
-    backgroundColor: '#eee',
+    backgroundColor: '#1e1e1e',
     marginBottom: 12,
     borderRadius: 8,
   },
-  ticker: { fontSize: 18, fontWeight: '600' },
-  date: { fontSize: 12, color: '#666', marginTop: 4 },
+  ticker: { fontSize: 18, fontWeight: '600', color: '#ffffff' },
+  text: { color: '#cccccc' },
+  date: { fontSize: 12, color: '#777', marginTop: 4 },
 });

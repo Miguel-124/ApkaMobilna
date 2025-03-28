@@ -21,6 +21,9 @@
     },
     "web": {
       "favicon": "./assets/images/logo_SmartInwestor.jpeg"
+    },
+    "experiments": {
+      "newArchEnabled": true
     }
   }
 }

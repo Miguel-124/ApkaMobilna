@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import { saveTransaction } from '../utils/storage';
 
-
 export default function AddTransactionScreen() {
   const [ticker, setTicker] = useState('');
   const [shares, setShares] = useState('');
@@ -13,7 +12,7 @@ export default function AddTransactionScreen() {
       Alert.alert('Błąd', 'Wypełnij wszystkie pola!');
       return;
     }
-  
+
     const newTransaction = {
       id: Date.now().toString(),
       ticker: ticker.toUpperCase(),
@@ -21,11 +20,11 @@ export default function AddTransactionScreen() {
       price: Number(price),
       date: new Date().toISOString().split('T')[0],
     };
-  
+
     await saveTransaction(newTransaction);
-  
+
     Alert.alert('Sukces 🎉', `Dodano transakcję:\n${shares} x ${ticker.toUpperCase()} @ $${price}`);
-  
+
     setTicker('');
     setShares('');
     setPrice('');
@@ -41,6 +40,7 @@ export default function AddTransactionScreen() {
         value={ticker}
         onChangeText={setTicker}
         autoCapitalize="characters"
+        placeholderTextColor="#777"
       />
       <TextInput
         style={styles.input}
@@ -48,6 +48,7 @@ export default function AddTransactionScreen() {
         value={shares}
         onChangeText={setShares}
         keyboardType="numeric"
+        placeholderTextColor="#777"
       />
       <TextInput
         style={styles.input}
@@ -55,6 +56,7 @@ export default function AddTransactionScreen() {
         value={price}
         onChangeText={setPrice}
         keyboardType="numeric"
+        placeholderTextColor="#777"
       />
 
       <Button title="Dodaj" onPress={handleAdd} />
@@ -63,11 +65,13 @@ export default function AddTransactionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, gap: 12 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 12 },
+  container: { flex: 1, padding: 24, gap: 12, backgroundColor: '#121212' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 12, color: '#ffffff' },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#444',
+    backgroundColor: '#1e1e1e',
+    color: '#fff',
     padding: 12,
     borderRadius: 8,
     fontSize: 16,
