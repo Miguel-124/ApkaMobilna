@@ -6,6 +6,7 @@ import { getPortfolioFromTransactions } from '../utils/portfolio';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback,useState } from 'react';
 
+
 type PortfolioItem = {
   ticker: string;
   shares: number;
