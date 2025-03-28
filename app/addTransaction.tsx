@@ -4,6 +4,7 @@ import { saveTransaction } from '../utils/storage';
 import { searchAssets } from '../utils/assets'; // Funkcja wyszukiwania aktywów
 import { getPriceForTicker } from '../utils/prices'; // Funkcja pobierania cen
 import { useDebouncedCallback } from 'use-debounce'; // Debounced callback
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type Asset = {
   id: string;
@@ -19,6 +20,8 @@ export default function AddTransactionScreen() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [assetType, setAssetType] = useState<'stock' | 'crypto'>('stock'); // Typ aktywa
+  const [totalAmount, setTotalAmount] = useState(''); // Kwota wydana na aktywa
+  const [date, setDate] = useState(new Date()); // Ustawienie początkowej daty
 
   // Debounced wyszukiwanie aktywów
   const debouncedSearch = useDebouncedCallback(async (query: string) => {
@@ -30,6 +33,27 @@ export default function AddTransactionScreen() {
   const handleSearch = (query: string) => {
     setTicker(query); // Ustawienie tickeru
     debouncedSearch(query); // Wyszukiwanie po zmianie
+  };
+
+  const handleSharesChange = (shares: string) => {
+    setShares(shares);
+    if (price && shares) {
+      setTotalAmount((parseFloat(shares) * parseFloat(price)).toString());
+    }
+  };
+  
+  const handlePriceChange = (price: string) => {
+    setPrice(price);
+    if (shares && price) {
+      setTotalAmount((parseFloat(shares) * parseFloat(price)).toString());
+    }
+  };
+  
+  const handleTotalAmountChange = (totalAmount: string) => {
+    setTotalAmount(totalAmount);
+    if (totalAmount && price) {
+      setShares((parseFloat(totalAmount) / parseFloat(price)).toString());
+    }
   };
 
   const handleSelectAsset = async (asset: Asset) => {
@@ -48,26 +72,28 @@ export default function AddTransactionScreen() {
   };
 
   const handleAdd = async () => {
-    if (!selectedAsset || !shares || !price) {
+    if (!selectedAsset || !shares || !price || !totalAmount) {
       Alert.alert('Błąd', 'Wypełnij wszystkie pola!');
       return;
     }
-
+  
     const newTransaction = {
       id: Date.now().toString(),
       ticker: selectedAsset.symbol.toUpperCase(),
       shares: Number(shares),
       price: Number(price),
-      date: new Date().toISOString().split('T')[0],
+      totalAmount: Number(totalAmount), // Kwota wydana
+      date: date.toISOString(), // Data transakcji
     };
-
+  
     await saveTransaction(newTransaction);
-
+  
     Alert.alert('Sukces 🎉', `Dodano transakcję:\n${shares} x ${selectedAsset.symbol.toUpperCase()} @ $${price}`);
-
+  
     setTicker('');
     setShares('');
     setPrice('');
+    setTotalAmount('');
     setSelectedAsset(null);
   };
 
@@ -92,7 +118,7 @@ export default function AddTransactionScreen() {
         style={styles.input}
         placeholder="Wyszukaj aktywo (np. Tesla, BTC)"
         value={ticker}
-        onChangeText={handleSearch} // Używamy debounced wyszukiwania
+        onChangeText={handleSearch}
         autoCapitalize="characters"
         placeholderTextColor="#777"
       />
@@ -113,7 +139,7 @@ export default function AddTransactionScreen() {
         style={styles.input}
         placeholder="Ilość"
         value={shares}
-        onChangeText={setShares}
+        onChangeText={handleSharesChange}
         keyboardType="numeric"
         placeholderTextColor="#777"
       />
@@ -121,11 +147,29 @@ export default function AddTransactionScreen() {
         style={styles.input}
         placeholder="Cena zakupu"
         value={price}
-        onChangeText={setPrice}
+        onChangeText={handlePriceChange}
         keyboardType="numeric"
         placeholderTextColor="#777"
       />
-
+      <TextInput
+        style={styles.input}
+        placeholder="Kwota wydana"
+        value={totalAmount}
+        onChangeText={handleTotalAmountChange}
+        keyboardType="numeric"
+        placeholderTextColor="#777"
+      />
+      <View style={styles.datePickerContainer}>
+        <Text style={styles.dateText}>Data transakcji:</Text>
+        <DateTimePicker
+          value={date}
+          mode="datetime"
+          onChange={(event, selectedDate) => {
+            setDate(selectedDate || date); // Aktualizowanie daty
+          }}
+          style={styles.datePicker}
+        />
+      </View>
       <Button title="Dodaj" onPress={handleAdd} />
     </View>
   );
@@ -152,5 +196,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  datePickerContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#ffffff',
+  },
+  datePicker: {
+    width: '100%',
+    borderRadius: 8,
+    backgroundColor: '#1e1e1e',
   },
 });

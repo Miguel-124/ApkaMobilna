@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Alert, Pressable } from 'react-native';
 import { getTransactions, deleteTransaction } from '../utils/storage';
+import moment from 'moment';
+
 
 type Transaction = {
   id: string;
@@ -61,8 +63,11 @@ export default function TransactionsScreen() {
             style={styles.card}
           >
             <Text style={styles.ticker}>{item.ticker}</Text>
-            <Text style={styles.text}>{item.shares} szt. @ ${item.price}</Text>
-            <Text style={styles.date}>{item.date}</Text>
+            <Text style={styles.text}>{item.shares} szt. ${item.price}</Text>
+            <Text style={[styles.text, { color: item.shares > 0 ? 'green' : 'red' }]}>
+            {item.shares > 0 ? 'Kupno' : 'Sprzedaż'}: ${Math.abs(item.shares * item.price).toFixed(2)}
+            </Text>
+            <Text style={styles.date}>{moment(item.date).format('DD.MM.YYYY HH:mm')}</Text>
           </Pressable>
         )}
       />

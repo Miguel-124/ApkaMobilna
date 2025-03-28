@@ -13,7 +13,7 @@ type PortfolioItem = {
 
 type ExtendedItem = PortfolioItem & {
   currentPrice: number | null;
-  assetType: 'stock' | 'crypto'; // Dodajemy typ aktywa
+  assetType: 'stock' | 'crypto';
 };
 
 export default function PortfolioScreen() {
@@ -70,11 +70,14 @@ export default function PortfolioScreen() {
                 <Pressable style={styles.card}>
                   <Text style={styles.ticker}>{item.ticker}</Text>
                   <Text style={styles.text}>
-                    {item.shares} szt. @ ${item.avgPrice}
+                    {item.shares} szt. ${item.avgPrice}
+                  </Text>
+                  <Text style={[styles.text, { color: item.shares > 0 ? 'green' : 'red' }, { fontWeight: 'bold' }]}>
+                    ${Math.abs(item.shares * item.avgPrice).toFixed(2)}
                   </Text>
                   {item.currentPrice !== null ? (
                     <>
-                      <Text style={styles.price}>Kurs: ${item.currentPrice.toFixed(2)}</Text>
+                      <Text style={styles.price}>Aktualny kurs: ${item.currentPrice.toFixed(2)}</Text>
                       <Text style={styles.profit}>
                         {profit !== null && profitPercent !== null ? (
                         <Text style={[styles.profit, { color: profit >= 0 ? '#88ff88' : '#ff8888' }]}>

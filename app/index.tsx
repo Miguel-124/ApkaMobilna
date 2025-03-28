@@ -35,16 +35,18 @@ export default function Index() {
   );
 
   const pieData = portfolio.map((asset) => {
-    const value = asset.shares * asset.avgPrice;
+    const value = asset.shares * asset.avgPrice;  // Obliczamy wartość aktywa
+    const percent = (value / totalValue) * 100;    // Procentowy udział w portfelu
+    
     return {
-      name: asset.ticker,
-      population: value,
-      color: getColor(asset.ticker),
-      legendFontColor: '#ffffff',
-      legendFontSize: 14,
+      name: asset.ticker,           // Tylko ticker w legendzie
+      population: percent,          // Wartość procentowa używana do obliczeń
+      color: getColor(asset.ticker),// Kolor aktywa
+      legendFontColor: '#ffffff',   // Kolor czcionki w legendzie
+      legendFontSize: 14,           // Rozmiar czcionki w legendzie
     };
   });
-
+  
   return (
     <View style={styles.container}>
       <Image
@@ -53,36 +55,36 @@ export default function Index() {
       />
       <Text style={styles.title}>SmartInwestor</Text>
       <Text style={styles.subtitle}>Wartość portfela: ${totalValue.toFixed(2)}</Text>
-
+  
       {portfolio.length > 0 ? (
         <PieChart
-          data={pieData}
-          width={Dimensions.get('window').width - 32}
-          height={220}
-          chartConfig={{
+            data={pieData}
+            width={Dimensions.get('window').width - 32}
+            height={220}
+            chartConfig={{
             color: () => '#ffffff',
             labelColor: () => '#ffffff',
             backgroundGradientFrom: '#121212',
             backgroundGradientTo: '#121212',
-          }}
-          accessor="population"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          center={[0, 0]}
-          absolute
+            }}
+            accessor="population"     // Wykorzystanie procentowej wartości
+            backgroundColor="transparent"
+            paddingLeft="15"
+            center={[0, 0]}
+            absolute={false}         // Wyświetlanie procentów w wykresie
         />
       ) : (
         <Text style={styles.noData}>Brak danych do wykresu</Text>
       )}
-
+  
       <View style={styles.buttonContainer}>
         <Link href="/portfolio" asChild>
           <Button title="Zobacz portfolio" />
         </Link>
-        <Link href="/add-transaction" asChild>
+        <Link href="/addTransaction" asChild>
           <Button title="Dodaj transakcję" />
         </Link>
-        <Link href="/transactions" asChild>
+        <Link href="/transactionsHistory" asChild>
           <Button title="Historia transakcji" />
         </Link>
       </View>
@@ -107,18 +109,28 @@ const colorPalette = [
     return colorMap.get(ticker)!;
   }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 48, backgroundColor: '#121212' },
-  logo: {
-    width: 120,
-    height: 120,
-    resizeMode: 'contain',
-    alignSelf: 'center',
-    marginBottom: 12,
-    borderRadius: 20,
-  },
-  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 8, color: '#ffffff' },
-  subtitle: { fontSize: 18, textAlign: 'center', marginBottom: 24, color: '#cccccc' },
-  noData: { color: '#777', fontSize: 16, textAlign: 'center', marginBottom: 24 },
-  buttonContainer: { marginTop: 32, gap: 12 },
-});
+  const styles = StyleSheet.create({
+    container: { flex: 1, padding: 16, paddingTop: 48, backgroundColor: '#121212' },
+    logo: {
+      width: 120,
+      height: 120,
+      resizeMode: 'contain',
+      alignSelf: 'center',
+      marginBottom: 12,
+      borderRadius: 20,
+    },
+    title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 8, color: '#ffffff' },
+    subtitle: { fontSize: 18, textAlign: 'center', marginBottom: 24, color: '#cccccc' },
+    noData: { color: '#777', fontSize: 16, textAlign: 'center', marginBottom: 24 },
+    buttonContainer: { marginTop: 32, gap: 12 },
+    assetList: {
+      marginTop: 24,
+    },
+    assetItem: {
+      marginBottom: 8,
+    },
+    assetText: {
+      fontSize: 16,
+      color: '#ffffff',
+    },
+  });
