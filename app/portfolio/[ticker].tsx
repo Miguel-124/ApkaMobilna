@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { getTransactions, removeTransactionById, saveTransaction } from '../../utils/storage';
 import { getPriceForTicker } from '../../utils/prices';
-
 import { Alert, Pressable } from 'react-native';
+import moment from 'moment';
 
 type Transaction = {
   id: string;
@@ -86,7 +86,7 @@ export default function AssetDetailScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>{ticker?.toUpperCase()}</Text>
+      <Text style={[styles.title, { alignSelf: 'center' }]}>{ticker?.toUpperCase()}</Text>
 
       {loading ? (
         <ActivityIndicator size="large" color="#ffffff" />
@@ -132,7 +132,7 @@ export default function AssetDetailScreen() {
                 <View key={tx.id} style={styles.txCard}>
                   <View style={styles.txRow}>
                     <Text style={styles.txText}>
-                      📅 {new Date(tx.date).toLocaleDateString()} | {tx.shares} szt. @ ${tx.price}
+                      📅 {moment(tx.date).format('DD.MM.YYYY HH:mm')} | {tx.shares.toFixed(5)} szt. ${tx.price}
                     </Text>
                     <Pressable onPress={() => handleDelete(tx.id)}>
                       <Text style={styles.deleteIcon}>🗑️</Text>

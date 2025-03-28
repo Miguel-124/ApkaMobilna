@@ -59,9 +59,9 @@ export default function AddTransactionScreen() {
   const handleSelectAsset = async (asset: Asset) => {
     setSelectedAsset(asset);
     setTicker(asset.symbol.toUpperCase());
-  
+
+    // Jeśli cena nie jest dostępna, pobieramy ją z odpowiedniego źródła
     if (asset.current_price === null) {
-      // Jeśli cena nie jest dostępna (np. dla akcji), pobieramy ją z Finnhub
       const price = await getPriceForTicker(asset.symbol, assetType); // Przekazujemy assetType
       setPrice(price ? price.toString() : ''); // Ustawiamy cenę zakupu na bieżącą cenę
     } else {
