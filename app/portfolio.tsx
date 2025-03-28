@@ -13,6 +13,7 @@ type PortfolioItem = {
 
 type ExtendedItem = PortfolioItem & {
   currentPrice: number | null;
+  assetType: 'stock' | 'crypto'; // Dodajemy typ aktywa
 };
 
 export default function PortfolioScreen() {
@@ -26,10 +27,15 @@ export default function PortfolioScreen() {
 
       const enrichedPortfolio: ExtendedItem[] = await Promise.all(
         basePortfolio.map(async (item) => {
-          const price = await getPriceForTicker(item.ticker);
+          // Sprawdzamy, czy aktywo to akcja czy krypto
+          const assetType: 'stock' | 'crypto' = 
+            item.ticker === 'BTC' || item.ticker === 'ETH' ? 'crypto' : 'stock'; // Prosta logika, jeśli chcesz to rozszerzyć
+
+          const price = await getPriceForTicker(item.ticker, assetType); // Przekazujemy także typ aktywa
           return {
             ...item,
             currentPrice: price ?? null,
+            assetType, // Przechowujemy typ aktywa
           };
         })
       );

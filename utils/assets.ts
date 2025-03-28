@@ -1,25 +1,37 @@
+// assets.ts
+
 import axios from 'axios';
+import { FINNHUB_TOKEN } from './prices'; // Zaimportuj token Finnhub
 
-const API_URL = 'https://api.coingecko.com/api/v3/';
+const COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/search';
+const FINNHUB_API_URL = 'https://finnhub.io/api/v1/search';
 
-export async function searchAssets(query: string) {
+// Funkcja do wyszukiwania aktywów
+export async function searchAssets(query: string, assetType: 'stock' | 'crypto') {
   try {
-    // Pierwsze zapytanie: wyszukiwanie aktywów na podstawie nazwy lub symbolu
-    const searchResponse = await axios.get(`${API_URL}search?query=${query}`);
-    
-    // Mapowanie wyników wyszukiwania
-    const coins = searchResponse.data.coins;
+    if (assetType === 'crypto') {
+      // Zapytanie dla kryptowalut z CoinGecko
+      const response = await axios.get(`${COINGECKO_API_URL}?query=${query}`);
+      return response.data.coins.map((coin: any) => ({
+        id: coin.id, // id dla CoinGecko
+        symbol: coin.symbol, // symbol aktywa (np. BTC, ETH)
+        name: coin.name, // nazwa aktywa (np. Bitcoin)
+        current_price: null, // Cena krypto będzie później pobierana przez getPriceForTicker
+      }));
+    }
 
-    // Zapytanie o ceny aktywów
-    const pricesResponse = await axios.get(`${API_URL}simple/price?ids=${coins.map((coin: any) => coin.id).join(',')}&vs_currencies=usd`);
+    if (assetType === 'stock') {
+      // Zapytanie dla akcji z Finnhub
+      const response = await axios.get(`${FINNHUB_API_URL}?q=${query}&token=${FINNHUB_TOKEN}`);
+      return response.data.result.map((asset: any) => ({
+        id: asset.symbol, // id dla Finnhub
+        symbol: asset.symbol, // symbol akcji (np. AAPL)
+        name: asset.description, // pełna nazwa akcji (np. Apple Inc.)
+        current_price: null, // Cena dla akcji zostanie pobrana później
+      }));
+    }
 
-    // Łączenie wyników wyszukiwania z cenami
-    return coins.map((coin: any) => ({
-      id: coin.id, // id dla CoinGecko
-      symbol: coin.symbol, // symbol aktywa (np. BTC, ETH)
-      name: coin.name, // nazwa aktywa (np. Bitcoin)
-      current_price: pricesResponse.data[coin.id]?.usd || null, // Cena aktywa w USD
-    }));
+    return [];
   } catch (error) {
     console.error('Błąd podczas wyszukiwania aktywów', error);
     return [];

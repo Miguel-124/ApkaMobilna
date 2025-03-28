@@ -1,3 +1,4 @@
+//data/portfolio.ts
 export type Asset = {
     id: string;
     ticker: string;

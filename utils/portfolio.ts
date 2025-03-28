@@ -1,3 +1,4 @@
+// utils/portfolio.ts
 type Transaction = {
     id: string;
     ticker: string;

@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { saveTransaction } from '../utils/storage';
-import { searchAssets } from '../utils/assets'; // Zaimportuj funkcję wyszukiwania aktywów
-import { useDebouncedCallback } from 'use-debounce'; // Zainstaluj bibliotekę 'use-debounce'
+import { searchAssets } from '../utils/assets'; // Funkcja wyszukiwania aktywów
+import { getPriceForTicker } from '../utils/prices'; // Funkcja pobierania cen
+import { useDebouncedCallback } from 'use-debounce'; // Debounced callback
 
-// Typ dla aktywów
 type Asset = {
   id: string;
   symbol: string;
@@ -16,21 +16,35 @@ export default function AddTransactionScreen() {
   const [ticker, setTicker] = useState('');
   const [shares, setShares] = useState('');
   const [price, setPrice] = useState('');
-  const [assets, setAssets] = useState<Asset[]>([]); // Określamy typ danych
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [assetType, setAssetType] = useState<'stock' | 'crypto'>('stock'); // Typ aktywa
 
-  // Debounced search function
-  const handleSearch = useDebouncedCallback(async (query: string) => {
+  // Debounced wyszukiwanie aktywów
+  const debouncedSearch = useDebouncedCallback(async (query: string) => {
     if (!query) return;
-    const results = await searchAssets(query);
+    const results = await searchAssets(query, assetType); // Wyszukiwanie aktywów
     setAssets(results);
-  }, 500); // 500ms debounce
+  }, 500);
 
-  const handleSelectAsset = (asset: Asset) => {
+  const handleSearch = (query: string) => {
+    setTicker(query); // Ustawienie tickeru
+    debouncedSearch(query); // Wyszukiwanie po zmianie
+  };
+
+  const handleSelectAsset = async (asset: Asset) => {
     setSelectedAsset(asset);
-    setTicker(asset.symbol.toUpperCase()); // Ustawiamy ticker na podstawie wybranego aktywa
-    setPrice(asset.current_price ? asset.current_price.toString() : ''); // Automatycznie ustawiamy cenę zakupu na bieżącą cenę
-    setAssets([]); // Usuwamy listę wyników po wyborze aktywa
+    setTicker(asset.symbol.toUpperCase());
+  
+    if (asset.current_price === null) {
+      // Jeśli cena nie jest dostępna (np. dla akcji), pobieramy ją z Finnhub
+      const price = await getPriceForTicker(asset.symbol, assetType); // Przekazujemy assetType
+      setPrice(price ? price.toString() : ''); // Ustawiamy cenę zakupu na bieżącą cenę
+    } else {
+      setPrice(asset.current_price.toString()); // Ustawiamy cenę zakupu dla kryptowalut
+    }
+  
+    setAssets([]);
   };
 
   const handleAdd = async () => {
@@ -61,14 +75,24 @@ export default function AddTransactionScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Dodaj transakcję</Text>
 
+      <View style={styles.assetTypeContainer}>
+        <Button
+          title="Akcje/ETF"
+          onPress={() => setAssetType('stock')}
+          color={assetType === 'stock' ? '#00f' : '#fff'}
+        />
+        <Button
+          title="Kryptowaluty"
+          onPress={() => setAssetType('crypto')}
+          color={assetType === 'crypto' ? '#00f' : '#fff'}
+        />
+      </View>
+
       <TextInput
         style={styles.input}
         placeholder="Wyszukaj aktywo (np. Tesla, BTC)"
         value={ticker}
-        onChangeText={(text) => {
-          setTicker(text);
-          handleSearch(text); // Wyszukiwanie na bieżąco z debouncingiem
-        }}
+        onChangeText={handleSearch} // Używamy debounced wyszukiwania
         autoCapitalize="characters"
         placeholderTextColor="#777"
       />
@@ -123,5 +147,10 @@ const styles = StyleSheet.create({
     color: '#88ff88',
     fontSize: 16,
     marginVertical: 4,
+  },
+  assetTypeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
 });

@@ -1,3 +1,4 @@
+// app/portfolio/[ticker].tsx
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
@@ -21,6 +22,12 @@ export default function AssetDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [lastDeleted, setLastDeleted] = useState<Transaction | null>(null);
 
+  // Logika przypisania typu aktywa na podstawie tickera
+  const getAssetType = (ticker: string): 'stock' | 'crypto' => {
+    const cryptoTickers = ['BTC', 'ETH', 'SOL', 'BNB']; // lista kryptowalut
+    return cryptoTickers.includes(ticker.toUpperCase()) ? 'crypto' : 'stock';
+  };
+
   useEffect(() => {
     const load = async () => {
       const all = await getTransactions();
@@ -28,7 +35,8 @@ export default function AssetDetailScreen() {
 
       setTransactions(filtered);
 
-      const price = await getPriceForTicker(ticker);
+      const assetType = getAssetType(ticker); // Uzyskujemy typ aktywa
+      const price = await getPriceForTicker(ticker, assetType); // Przekazujemy typ aktywa do funkcji
       setCurrentPrice(price ?? null);
 
       setLoading(false);
@@ -53,6 +61,7 @@ export default function AssetDetailScreen() {
   const marketValue = currentPrice !== null ? currentPrice * totalShares : null;
   const profit = marketValue !== null ? marketValue - totalCost : null;
   const profitPercent = profit !== null ? (profit / totalCost) * 100 : null;
+
   const handleDelete = (id: string) => {
     Alert.alert(
       'Usuń transakcję',
@@ -74,7 +83,6 @@ export default function AssetDetailScreen() {
       ]
     );
   };
-
 
   return (
     <ScrollView style={styles.container}>

@@ -1,3 +1,4 @@
+// Code: src/screens/Index.tsx
 import { View, Text, Button, StyleSheet, Image, Dimensions } from 'react-native';
 import { Link } from 'expo-router';
 import { PieChart } from 'react-native-chart-kit';
