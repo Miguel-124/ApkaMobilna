@@ -1,3 +1,4 @@
+//app/portfolio.tsx
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { Link } from 'expo-router';

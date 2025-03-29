@@ -1,3 +1,4 @@
+// app/index.tsx
 import React, { useState, useCallback } from 'react';
 import { View, Text, Button, TouchableOpacity, StyleSheet, Image, Dimensions } from 'react-native';
 import { Link } from 'expo-router';

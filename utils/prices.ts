@@ -1,3 +1,4 @@
+// utls/prices.ts
 export const FINNHUB_TOKEN = 'cvjc3ehr01qlscpb681gcvjc3ehr01qlscpb6820'; // Eksportujemy token
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1/quote';
 const BINANCE_BASE_URL = 'https://api.binance.com/api/v3/ticker/price';
