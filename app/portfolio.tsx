@@ -10,11 +10,11 @@ type PortfolioItem = {
   ticker: string;
   shares: number;
   avgPrice: number;
+  assetType: 'stock' | 'crypto';
 };
 
 type ExtendedItem = PortfolioItem & {
   currentPrice: number | null;
-  assetType: 'stock' | 'crypto';
 };
 
 export default function PortfolioScreen() {
@@ -25,25 +25,18 @@ export default function PortfolioScreen() {
     const load = async () => {
       const transactions = await getTransactions();
       const basePortfolio = getPortfolioFromTransactions(transactions);
-
       const enrichedPortfolio: ExtendedItem[] = await Promise.all(
         basePortfolio.map(async (item) => {
-          // Prosta logika: jeśli ticker to BTC lub ETH, to krypto
-          const assetType: 'stock' | 'crypto' = 
-            item.ticker === 'BTC' || item.ticker === 'ETH' ? 'crypto' : 'stock';
-          const price = await getPriceForTicker(item.ticker, assetType);
+          const price = await getPriceForTicker(item.ticker, item.assetType);
           return {
             ...item,
             currentPrice: price ?? null,
-            assetType,
           };
         })
       );
-
       setPortfolio(enrichedPortfolio);
       setLoading(false);
     };
-
     load();
   }, []);
 

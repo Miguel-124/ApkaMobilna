@@ -10,6 +10,7 @@ type Transaction = {
   shares: number;
   price: number;
   date: string;
+  assetType: 'stock' | 'crypto';
 };
 
 export default function TransactionsScreen() {

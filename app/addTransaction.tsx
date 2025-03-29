@@ -93,6 +93,7 @@ export default function AddTransactionScreen() {
       price: Number(price),
       totalAmount: Number(totalAmount),
       date: date.toISOString(),
+      assetType,
     };
 
     await saveTransaction(newTransaction);

@@ -1,6 +1,6 @@
 // app/index.tsx
-import React, { useState, useCallback } from 'react';
-import { View, Text, Button, TouchableOpacity, StyleSheet, Image, Dimensions } from 'react-native';
+import React, { useState, useCallback, forwardRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Dimensions, TouchableOpacityProps } from 'react-native';
 import { Link } from 'expo-router';
 import { PieChart } from 'react-native-chart-kit';
 import { getTransactions } from '../utils/storage';
@@ -13,13 +13,19 @@ type PortfolioItem = {
   avgPrice: number;
 };
 
-function CustomButton({ title, style, ...props }: { title: string; style?: any } & any) {
+type Props = {
+    title: string;
+    style?: any;
+  } & TouchableOpacityProps;
+
+const CustomButton = forwardRef<React.ElementRef<typeof TouchableOpacity>, Props>(({ title, style, ...props }, ref) => {
     return (
-      <TouchableOpacity style={[styles.customButton, style]} {...props}>
+      <TouchableOpacity ref={ref} style={[styles.customButton, style]} {...props}>
         <Text style={styles.customButtonText}>{title}</Text>
       </TouchableOpacity>
     );
-  }
+  });
+
 
 export default function Index() {
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);

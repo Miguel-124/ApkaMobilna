@@ -13,6 +13,7 @@ type Transaction = {
   shares: number;
   price: number;
   date: string;
+  assetType: 'stock' | 'crypto';
 };
 
 export default function AssetDetailScreen() {
@@ -22,12 +23,6 @@ export default function AssetDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [lastDeleted, setLastDeleted] = useState<Transaction | null>(null);
 
-  // Logika przypisania typu aktywa na podstawie tickera
-  const getAssetType = (ticker: string): 'stock' | 'crypto' => {
-    const cryptoTickers = ['BTC', 'ETH', 'SOL', 'BNB']; // lista kryptowalut
-    return cryptoTickers.includes(ticker.toUpperCase()) ? 'crypto' : 'stock';
-  };
-
   useEffect(() => {
     const load = async () => {
       const all = await getTransactions();
@@ -35,7 +30,7 @@ export default function AssetDetailScreen() {
 
       setTransactions(filtered);
 
-      const assetType = getAssetType(ticker); // Uzyskujemy typ aktywa
+      const assetType = filtered[0]?.assetType ?? 'stock'; // fallback dla bezpieczeństwa
       const price = await getPriceForTicker(ticker, assetType); // Przekazujemy typ aktywa do funkcji
       setCurrentPrice(price ?? null);
 
