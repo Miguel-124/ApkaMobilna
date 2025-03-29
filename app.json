@@ -14,10 +14,13 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "newArchEnabled": false
     },
     "android": {
-      "package": "com.twoja_nazwa.smartinwestor"
+      "package": "com.twoja_nazwa.smartinwestor",
+      "newArchEnabled": false
+
     },
     "web": {
       "favicon": "./assets/images/logo_SmartInwestor.jpeg"
