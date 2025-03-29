@@ -138,6 +138,9 @@ const styles = StyleSheet.create({
   ticker: {
     fontSize: 20,
     fontWeight: '600',
+    textShadowColor: '#00BFFF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
     color: '#ffffff',
     marginBottom: 4,
   },

@@ -160,7 +160,14 @@ export default function AssetDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24, backgroundColor: '#121212' },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, color: '#ffffff' },
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    marginBottom: 16, 
+    color: '#00FFFF',
+    textShadowColor: '#00FFFF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8, },
   line: { fontSize: 16, marginBottom: 12, color: '#cccccc' },
   value: { fontWeight: '600', color: '#ffffff' },
   subtitle: {
@@ -168,16 +175,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 24,
     marginBottom: 12,
-    color: '#ffffff',
+    textAlign: 'center',
+    color: '#00FFFF',
+    textShadowColor: '#00CFFF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
   },
   transactions: {
     marginTop: 12,
   },
   txCard: {
     backgroundColor: '#1e1e1e',
-    padding: 10,
+    padding: 12,
     borderRadius: 8,
     marginBottom: 8,
+    paddingRight: 22,
+    borderWidth: 2,
+    borderColor: '#00FFFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+    elevation: 10,
   },
   txText: {
     color: '#cccccc',
@@ -194,6 +212,7 @@ const styles = StyleSheet.create({
   },
   deleteIcon: {
     fontSize: 18,
+    marginLeft: -9,
     color: '#ff5555',
     paddingHorizontal: 8,
   },
