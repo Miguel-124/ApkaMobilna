@@ -1,6 +1,6 @@
 //app/portfolio.tsx
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { Link } from 'expo-router';
 import { getTransactions } from '../utils/storage';
 import { getPortfolioFromTransactions } from '../utils/portfolio';
@@ -20,6 +20,9 @@ type ExtendedItem = PortfolioItem & {
 export default function PortfolioScreen() {
   const [portfolio, setPortfolio] = useState<ExtendedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+    const [sortOption, setSortOption] = useState<'name' | 'profit' | 'value'>('name');
+    const [sortMenuVisible, setSortMenuVisible] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -39,17 +42,63 @@ export default function PortfolioScreen() {
     };
     load();
   }, []);
+  const filteredPortfolio = portfolio
+  .filter(item =>
+    item.ticker.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+  .sort((a, b) => {
+    switch (sortOption) {
+      case 'name':
+        return a.ticker.localeCompare(b.ticker);
+      case 'profit':
+        const profitA = (a.currentPrice ?? 0) * a.shares - a.avgPrice * a.shares;
+        const profitB = (b.currentPrice ?? 0) * b.shares - b.avgPrice * b.shares;
+        return profitB - profitA;
+      case 'value':
+        const valueA = a.shares * (a.currentPrice ?? 0);
+        const valueB = b.shares * (b.currentPrice ?? 0);
+        return valueB - valueA;
+      default:
+        return 0;
+    }
+  });
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Twoje aktywa</Text>
+      <View style={styles.searchRow}>
+        <TextInput
+            placeholder="Wyszukaj..."
+            placeholderTextColor="#888"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+        />
+        <Pressable onPress={() => setSortMenuVisible(prev => !prev)} style={styles.sortButton}>
+            <Text style={styles.sortIcon}>⚙️</Text>
+        </Pressable>
+        </View>
+
+        {sortMenuVisible && (
+        <View style={styles.sortMenu}>
+            <Pressable onPress={() => { setSortOption('name'); setSortMenuVisible(false); }}>
+            <Text style={styles.sortOption}>Sortuj: Nazwa</Text>
+            </Pressable>
+            <Pressable onPress={() => { setSortOption('profit'); setSortMenuVisible(false); }}>
+            <Text style={styles.sortOption}>Sortuj: Zysk</Text>
+            </Pressable>
+            <Pressable onPress={() => { setSortOption('value'); setSortMenuVisible(false); }}>
+            <Text style={styles.sortOption}>Sortuj: Wartość</Text>
+            </Pressable>
+        </View>
+        )}
       {loading ? (
         <ActivityIndicator size="large" color="#ffffff" />
       ) : portfolio.length === 0 ? (
         <Text style={styles.noData}>Brak danych 😕</Text>
       ) : (
         <FlatList
-          data={portfolio}
+          data={filteredPortfolio}
           keyExtractor={(item) => item.ticker}
           renderItem={({ item }) => {
             const marketValue = item.currentPrice ? item.currentPrice * item.shares : null;
@@ -62,9 +111,9 @@ export default function PortfolioScreen() {
                 <Pressable style={styles.card}>
                   <Text style={styles.ticker}>{item.ticker}</Text>
                   <Text style={styles.text}>
-                    {item.shares} szt. @ ${item.avgPrice.toFixed(2)}
+                    {item.shares} szt. @ ${item.avgPrice.toFixed(6)}
                   </Text>
-                  <Text style={[styles.text, { color: item.shares > 0 ? 'lightgreen' : 'red' }, { fontWeight: 'bold' }]}>
+                  <Text style={[styles.text, { color: 'lightgreen' }, { fontWeight: 'bold' }]}>
                     ${Math.abs(item.shares * item.avgPrice).toFixed(2)}
                   </Text>
                   {item.currentPrice !== null ? (
@@ -155,5 +204,46 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 4,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  searchInput: {
+    flex: 1,
+    backgroundColor: '#1e1e1e',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    color: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#00FFFF',
+    marginRight: 8,
+  },
+  sortButton: {
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#00FFFF',
+    backgroundColor: '#1e1e1e',
+  },
+  sortIcon: {
+    fontSize: 20,
+    color: '#00FFFF',
+  },
+  sortMenu: {
+    backgroundColor: '#1e1e1e',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#00FFFF',
+    marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  sortOption: {
+    color: '#00FFFF',
+    paddingVertical: 4,
+    fontSize: 14,
   },
 });

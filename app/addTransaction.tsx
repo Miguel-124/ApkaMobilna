@@ -50,21 +50,21 @@ export default function AddTransactionScreen() {
   const handleSharesChange = (shares: string) => {
     setShares(shares);
     if (price && shares) {
-      setTotalAmount((parseFloat(shares) * parseFloat(price)).toString());
+      setTotalAmount((Number(shares) * Number(price)).toString());
     }
   };
 
   const handlePriceChange = (price: string) => {
     setPrice(price);
     if (shares && price) {
-      setTotalAmount((parseFloat(shares) * parseFloat(price)).toString());
+      setTotalAmount((Number(shares) * Number(price)).toString());
     }
   };
 
   const handleTotalAmountChange = (totalAmount: string) => {
     setTotalAmount(totalAmount);
     if (totalAmount && price) {
-      setShares((parseFloat(totalAmount) / parseFloat(price)).toString());
+      setShares((Number(totalAmount) / Number(price)).toString());
     }
   };
 
