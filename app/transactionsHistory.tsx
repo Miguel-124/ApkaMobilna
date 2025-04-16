@@ -1,7 +1,7 @@
 // app/transactionsHistory.tsx
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Alert, Pressable } from 'react-native';
-import { getTransactions, deleteTransaction } from '../utils/storage';
+import { getTransactions, deleteTransaction } from '../lib/storage/transactions';
 import moment from 'moment';
 
 type Transaction = {

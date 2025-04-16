@@ -3,8 +3,8 @@ import React, { useState, useCallback, forwardRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Dimensions, TouchableOpacityProps } from 'react-native';
 import { Link } from 'expo-router';
 import { PieChart } from 'react-native-chart-kit';
-import { getTransactions } from '../utils/storage';
-import { getPortfolioFromTransactions } from '../utils/portfolio';
+import { getTransactions } from '../lib/storage/transactions';
+import { getPortfolioFromTransactions } from '../lib/services/portfolio';
 import { useFocusEffect } from '@react-navigation/native';
 
 type PortfolioItem = {

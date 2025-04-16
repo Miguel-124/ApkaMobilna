@@ -12,9 +12,9 @@ import {
   Keyboard,
   TouchableWithoutFeedback
 } from 'react-native';
-import { saveTransaction } from '../utils/storage';
-import { searchAssets } from '../utils/assets'; // Funkcja wyszukiwania aktywów
-import { getPriceForTicker } from '../utils/prices'; // Funkcja pobierania cen
+import { saveTransaction } from '../lib/storage/transactions';
+import { searchAssets } from '../lib/constants/assets'; // Funkcja wyszukiwania aktywów
+import { getPriceForTicker } from '../lib/services/prices'; // Funkcja pobierania cen
 import { useDebouncedCallback } from 'use-debounce'; // Debounced callback
 import DateTimePicker from '@react-native-community/datetimepicker';
 

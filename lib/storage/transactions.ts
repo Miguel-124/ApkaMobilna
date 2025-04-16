@@ -1,4 +1,4 @@
-//utils/storage.ts
+//storage/transactions.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEY = 'transactions';

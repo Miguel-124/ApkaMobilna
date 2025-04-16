@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { Link } from 'expo-router';
-import { getTransactions } from '../utils/storage';
-import { getPortfolioFromTransactions } from '../utils/portfolio';
-import { getPriceForTicker } from '../utils/prices';
+import { getTransactions } from '../lib/storage/transactions';
+import { getPortfolioFromTransactions } from '../lib/services/portfolio';
+import { getPriceForTicker } from '../lib/services/prices';
 
 type PortfolioItem = {
   ticker: string;

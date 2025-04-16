@@ -2,8 +2,8 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
-import { getTransactions, removeTransactionById, saveTransaction } from '../../utils/storage';
-import { getPriceForTicker } from '../../utils/prices';
+import { getTransactions, removeTransactionById, saveTransaction } from '../../lib/storage/transactions';
+import { getPriceForTicker } from '../../lib/services/prices';
 import { Alert, Pressable } from 'react-native';
 import moment from 'moment';
 

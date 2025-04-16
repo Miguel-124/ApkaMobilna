@@ -1,6 +1,6 @@
 //utils/assets.ts
 import axios from 'axios';
-import { FINNHUB_TOKEN } from './prices'; // Zaimportuj token Finnhub
+import { FINNHUB_TOKEN } from '../services/prices'; // Zaimportuj token Finnhub
 
 const COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/search';
 const FINNHUB_API_URL = 'https://finnhub.io/api/v1/search';
