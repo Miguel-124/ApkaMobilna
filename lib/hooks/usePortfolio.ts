@@ -6,6 +6,9 @@ import { PortfolioItem } from '../constants/types';
 
 export type ExtendedItem = PortfolioItem & {
   currentPrice: number | null;
+  marketValue: number | null;
+  profit: number | null;
+  profitPercent: number | null;
 };
 
 export function usePortfolio() {
@@ -16,15 +19,25 @@ export function usePortfolio() {
     setLoading(true);
     const transactions = await getTransactions();
     const basePortfolio = getPortfolioFromTransactions(transactions);
+
     const enrichedPortfolio: ExtendedItem[] = await Promise.all(
       basePortfolio.map(async (item) => {
-        const price = await getPriceForTicker(item.ticker, item.assetType);
+        const currentPrice = await getPriceForTicker(item.ticker, item.assetType);
+        const marketValue = currentPrice !== null ? currentPrice * item.shares : null;
+        const cost = item.avgPrice * item.shares;
+        const profit = marketValue !== null ? marketValue - cost : null;
+        const profitPercent = profit !== null ? (profit / cost) * 100 : null;
+
         return {
           ...item,
-          currentPrice: price ?? null,
+          currentPrice: currentPrice ?? null,
+          marketValue,
+          profit,
+          profitPercent,
         };
       })
     );
+
     setPortfolio(enrichedPortfolio);
     setLoading(false);
   };

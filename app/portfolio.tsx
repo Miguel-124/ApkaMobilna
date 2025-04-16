@@ -18,13 +18,9 @@ export default function PortfolioScreen() {
         case 'name':
           return a.ticker.localeCompare(b.ticker);
         case 'profit':
-          const profitA = (a.currentPrice ?? 0) * a.shares - a.avgPrice * a.shares;
-          const profitB = (b.currentPrice ?? 0) * b.shares - b.avgPrice * b.shares;
-          return profitB - profitA;
+          return (b.profit ?? 0) - (a.profit ?? 0);
         case 'value':
-          const valueA = a.shares * (a.currentPrice ?? 0);
-          const valueB = b.shares * (b.currentPrice ?? 0);
-          return valueB - valueA;
+          return (b.marketValue ?? 0) - (a.marketValue ?? 0);
         default:
           return 0;
       }
@@ -67,49 +63,36 @@ export default function PortfolioScreen() {
         <FlatList
           data={filteredPortfolio}
           keyExtractor={(item) => item.ticker}
-          renderItem={({ item }) => {
-            const marketValue = item.currentPrice ? item.currentPrice * item.shares : null;
-            const cost = item.avgPrice * item.shares;
-            const profit = marketValue ? marketValue - cost : null;
-            const profitPercent = profit && cost ? (profit / cost) * 100 : null;
-
-            return (
-              <Link href={`/portfolio/${item.ticker}`} asChild>
-                <Pressable style={styles.card}>
-                  <Text style={styles.ticker}>{item.ticker}</Text>
-                  <Text style={styles.text}>
-                    {item.shares} szt. @ ${item.avgPrice.toFixed(6)}
-                  </Text>
-                  <Text style={styles.text}>
-                    💵 Zainwestowano:{' '}
-                    <Text style={[styles.text, { color: 'lightgreen' }]}>
-                      ${Math.abs(item.shares * item.avgPrice).toFixed(2)}
-                    </Text>
-                  </Text>
-                  {item.currentPrice !== null ? (
-                    <>
-                      <Text style={styles.price}>Aktualny kurs: ${item.currentPrice.toFixed(2)}</Text>
-                      {profit !== null && profitPercent !== null ? (
-                        <Text
-                          style={[
-                            styles.profit,
-                            { color: profit >= 0 ? '#88ff88' : 'red' },
-                            { fontWeight: 'bold' },
-                          ]}
-                        >
-                          {profit >= 0 ? '📈' : '📉'} {profit.toFixed(2)} USD ({profitPercent.toFixed(1)}%)
-                        </Text>
-                      ) : (
-                        <Text style={styles.price}>Zysk niedostępny</Text>
-                      )}
-                    </>
-                  ) : (
-                    <Text style={styles.price}>Brak danych rynkowych</Text>
-                  )}
-                </Pressable>
-              </Link>
-            );
-          }}
+          renderItem={({ item }) => (
+            <Link href={`/portfolio/${item.ticker}`} asChild>
+              <Pressable style={styles.card}>
+                <Text style={styles.ticker}>{item.ticker}</Text>
+                <Text style={styles.text}>
+                  {item.shares} szt. @ ${item.avgPrice.toFixed(6)}
+                </Text>
+                <Text style={styles.text}>
+                  💵 Zainwestowano:{' '}
+                  <Text style={[styles.text, { color: 'lightgreen' }]}>${(item.avgPrice * item.shares).toFixed(2)}</Text>
+                </Text>
+                {item.currentPrice !== null ? (
+                  <>
+                    <Text style={styles.price}>Aktualny kurs: ${item.currentPrice.toFixed(2)}</Text>
+                    {item.profit !== null && item.profitPercent !== null ? (
+                      <Text
+                        style={[styles.profit, { color: item.profit >= 0 ? '#88ff88' : 'red' }, { fontWeight: 'bold' }]}
+                      >
+                        {item.profit >= 0 ? '📈' : '📉'} {item.profit.toFixed(2)} USD ({item.profitPercent.toFixed(1)}%)
+                      </Text>
+                    ) : (
+                      <Text style={styles.price}>Zysk niedostępny</Text>
+                    )}
+                  </>
+                ) : (
+                  <Text style={styles.price}>Brak danych rynkowych</Text>
+                )}
+              </Pressable>
+            </Link>
+          )}
         />
       )}
     </View>
@@ -144,7 +127,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: '#00FFFF',
-    // Neonowy cień
     shadowColor: '#00FFFF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.9,
