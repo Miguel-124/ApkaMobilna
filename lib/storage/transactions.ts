@@ -1,9 +1,10 @@
-//storage/transactions.ts
+// lib/storage/transactions.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEY = 'transactions';
+import { Transaction } from '../constants/types';
 
-export async function saveTransaction(transaction: any) {
+export async function saveTransaction(transaction: Transaction) {
   try {
     const json = await AsyncStorage.getItem(STORAGE_KEY);
     const data = json ? JSON.parse(json) : [];
@@ -24,7 +25,7 @@ export async function getTransactions() {
   }
 }
 
-export async function deleteTransaction(id: string) {
+export async function deleteTransactionById(id: string) {
   try {
     const json = await AsyncStorage.getItem(STORAGE_KEY);
     const data = json ? JSON.parse(json) : [];
@@ -35,14 +36,10 @@ export async function deleteTransaction(id: string) {
   }
 }
 
-export async function removeTransactionById(id: string) {
+export async function clearTransactions() {
   try {
-    const json = await AsyncStorage.getItem(STORAGE_KEY);
-    const data = json ? JSON.parse(json) : [];
-
-    const updated = data.filter((tx: any) => tx.id !== id);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    await AsyncStorage.removeItem(STORAGE_KEY);
   } catch (err) {
-    console.error('Błąd podczas usuwania transakcji:', err);
+    console.error('Błąd czyszczenia transakcji:', err);
   }
 }

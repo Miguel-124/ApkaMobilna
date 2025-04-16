@@ -1,4 +1,3 @@
-// app/addTransaction.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -9,33 +8,29 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  Keyboard,
-  TouchableWithoutFeedback
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
-import { saveTransaction } from '../lib/storage/transactions';
-import { searchAssets } from '../lib/constants/assets'; // Funkcja wyszukiwania aktywów
-import { getPriceForTicker } from '../lib/services/prices'; // Funkcja pobierania cen
-import { useDebouncedCallback } from 'use-debounce'; // Debounced callback
+import { useDebouncedCallback } from 'use-debounce';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { v4 as uuidv4 } from 'uuid';
 
-type Asset = {
-  id: string;
-  symbol: string;
-  name: string;
-  current_price: number | null;
-};
+import { saveTransaction } from '@/lib/storage/transactions';
+import { searchAssets } from '@/lib/constants/assets';
+import { getPriceForTicker } from '@/lib/services/prices';
+import { Transaction, Asset } from '@/lib/constants/types';
 
 export default function AddTransactionScreen() {
   const [ticker, setTicker] = useState('');
   const [shares, setShares] = useState('');
   const [price, setPrice] = useState('');
+  const [totalAmount, setTotalAmount] = useState('');
   const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [assetType, setAssetType] = useState<'stock' | 'crypto'>('stock');
-  const [totalAmount, setTotalAmount] = useState('');
   const [date, setDate] = useState(new Date());
 
-  // Debounced wyszukiwanie aktywów
   const debouncedSearch = useDebouncedCallback(async (query: string) => {
     if (!query) return;
     const results = await searchAssets(query, assetType);
@@ -47,36 +42,33 @@ export default function AddTransactionScreen() {
     debouncedSearch(query);
   };
 
-  const handleSharesChange = (shares: string) => {
-    setShares(shares);
-    if (price && shares) {
-      setTotalAmount((Number(shares) * Number(price)).toString());
+  const handleSharesChange = (value: string) => {
+    setShares(value);
+    if (price && value) {
+      setTotalAmount((Number(value) * Number(price)).toString());
     }
   };
 
-  const handlePriceChange = (price: string) => {
-    setPrice(price);
-    if (shares && price) {
-      setTotalAmount((Number(shares) * Number(price)).toString());
+  const handlePriceChange = (value: string) => {
+    setPrice(value);
+    if (shares && value) {
+      setTotalAmount((Number(shares) * Number(value)).toString());
     }
   };
 
-  const handleTotalAmountChange = (totalAmount: string) => {
-    setTotalAmount(totalAmount);
-    if (totalAmount && price) {
-      setShares((Number(totalAmount) / Number(price)).toString());
+  const handleTotalAmountChange = (value: string) => {
+    setTotalAmount(value);
+    if (value && price) {
+      setShares((Number(value) / Number(price)).toString());
     }
   };
 
   const handleSelectAsset = async (asset: Asset) => {
     setSelectedAsset(asset);
     setTicker(asset.symbol.toUpperCase());
-    if (asset.current_price === null) {
-      const fetchedPrice = await getPriceForTicker(asset.symbol, assetType);
-      setPrice(fetchedPrice ? fetchedPrice.toString() : '');
-    } else {
-      setPrice(asset.current_price.toString());
-    }
+
+    const currentPrice = asset.current_price ?? await getPriceForTicker(asset.symbol, assetType);
+    setPrice(currentPrice ? currentPrice.toString() : '');
     setAssets([]);
   };
 
@@ -86,8 +78,8 @@ export default function AddTransactionScreen() {
       return;
     }
 
-    const newTransaction = {
-      id: Date.now().toString(),
+    const newTransaction: Transaction = {
+      id: uuidv4(),
       ticker: selectedAsset.symbol.toUpperCase(),
       shares: Number(shares),
       price: Number(price),
@@ -97,6 +89,7 @@ export default function AddTransactionScreen() {
     };
 
     await saveTransaction(newTransaction);
+
     Alert.alert(
       'Sukces 🎉',
       `Dodano transakcję:\n${shares} x ${selectedAsset.symbol.toUpperCase()} @ $${price}`
@@ -107,46 +100,37 @@ export default function AddTransactionScreen() {
     setPrice('');
     setTotalAmount('');
     setSelectedAsset(null);
+    setDate(new Date());
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Dodaj transakcję</Text>
 
         <View style={styles.assetTypeContainer}>
-          <TouchableOpacity
-            style={[
-              styles.assetTypeButton,
-              assetType === 'stock' && styles.assetTypeButtonActive,
-            ]}
-            onPress={() => setAssetType('stock')}
-          >
-            <Text
+          {(['stock', 'crypto'] as const).map((type) => (
+            <TouchableOpacity
+              key={type}
               style={[
-                styles.assetTypeText,
-                assetType === 'stock' && styles.assetTypeTextActive,
+                styles.assetTypeButton,
+                assetType === type && styles.assetTypeButtonActive,
               ]}
+              onPress={() => setAssetType(type)}
             >
-              Akcje/ETF
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.assetTypeButton,
-              assetType === 'crypto' && styles.assetTypeButtonActive,
-            ]}
-            onPress={() => setAssetType('crypto')}
-          >
-            <Text
-              style={[
-                styles.assetTypeText,
-                assetType === 'crypto' && styles.assetTypeTextActive,
-              ]}
-            >
-              Kryptowaluty
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.assetTypeText,
+                  assetType === type && styles.assetTypeTextActive,
+                ]}
+              >
+                {type === 'stock' ? 'Akcje/ETF' : 'Kryptowaluty'}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         <TextInput
@@ -169,6 +153,7 @@ export default function AddTransactionScreen() {
                 </Text>
               </TouchableOpacity>
             )}
+            style={{ maxHeight: 150 }}
           />
         )}
 
@@ -212,14 +197,13 @@ export default function AddTransactionScreen() {
         <View style={styles.addButtonContainer}>
           <Button title="Dodaj" onPress={handleAdd} color="#00FFFF" />
         </View>
-      </View>
-    </TouchableWithoutFeedback>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 24,
     gap: 12,
     backgroundColor: '#121212',

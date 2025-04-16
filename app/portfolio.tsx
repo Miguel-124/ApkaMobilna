@@ -1,97 +1,64 @@
-//app/portfolio.tsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { Link } from 'expo-router';
-import { getTransactions } from '../lib/storage/transactions';
-import { getPortfolioFromTransactions } from '../lib/services/portfolio';
-import { getPriceForTicker } from '../lib/services/prices';
-
-type PortfolioItem = {
-  ticker: string;
-  shares: number;
-  avgPrice: number;
-  assetType: 'stock' | 'crypto';
-};
-
-type ExtendedItem = PortfolioItem & {
-  currentPrice: number | null;
-};
+import { usePortfolio } from '@/lib/hooks/usePortfolio';
 
 export default function PortfolioScreen() {
-  const [portfolio, setPortfolio] = useState<ExtendedItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { portfolio, loading } = usePortfolio();
   const [searchQuery, setSearchQuery] = useState('');
-    const [sortOption, setSortOption] = useState<'name' | 'profit' | 'value'>('name');
-    const [sortMenuVisible, setSortMenuVisible] = useState(false);
+  const [sortOption, setSortOption] = useState<'name' | 'profit' | 'value'>('name');
+  const [sortMenuVisible, setSortMenuVisible] = useState(false);
 
-  useEffect(() => {
-    const load = async () => {
-      const transactions = await getTransactions();
-      const basePortfolio = getPortfolioFromTransactions(transactions);
-      const enrichedPortfolio: ExtendedItem[] = await Promise.all(
-        basePortfolio.map(async (item) => {
-          const price = await getPriceForTicker(item.ticker, item.assetType);
-          return {
-            ...item,
-            currentPrice: price ?? null,
-          };
-        })
-      );
-      setPortfolio(enrichedPortfolio);
-      setLoading(false);
-    };
-    load();
-  }, []);
   const filteredPortfolio = portfolio
-  .filter(item =>
-    item.ticker.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-  .sort((a, b) => {
-    switch (sortOption) {
-      case 'name':
-        return a.ticker.localeCompare(b.ticker);
-      case 'profit':
-        const profitA = (a.currentPrice ?? 0) * a.shares - a.avgPrice * a.shares;
-        const profitB = (b.currentPrice ?? 0) * b.shares - b.avgPrice * b.shares;
-        return profitB - profitA;
-      case 'value':
-        const valueA = a.shares * (a.currentPrice ?? 0);
-        const valueB = b.shares * (b.currentPrice ?? 0);
-        return valueB - valueA;
-      default:
-        return 0;
-    }
-  });
+    .filter(item =>
+      item.ticker.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      switch (sortOption) {
+        case 'name':
+          return a.ticker.localeCompare(b.ticker);
+        case 'profit':
+          const profitA = (a.currentPrice ?? 0) * a.shares - a.avgPrice * a.shares;
+          const profitB = (b.currentPrice ?? 0) * b.shares - b.avgPrice * b.shares;
+          return profitB - profitA;
+        case 'value':
+          const valueA = a.shares * (a.currentPrice ?? 0);
+          const valueB = b.shares * (b.currentPrice ?? 0);
+          return valueB - valueA;
+        default:
+          return 0;
+      }
+    });
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Twoje aktywa</Text>
       <View style={styles.searchRow}>
         <TextInput
-            placeholder="Wyszukaj..."
-            placeholderTextColor="#888"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            style={styles.searchInput}
+          placeholder="Wyszukaj..."
+          placeholderTextColor="#888"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          style={styles.searchInput}
         />
         <Pressable onPress={() => setSortMenuVisible(prev => !prev)} style={styles.sortButton}>
-            <Text style={styles.sortIcon}>⚙️</Text>
+          <Text style={styles.sortIcon}>⚙️</Text>
         </Pressable>
-        </View>
+      </View>
 
-        {sortMenuVisible && (
+      {sortMenuVisible && (
         <View style={styles.sortMenu}>
-            <Pressable onPress={() => { setSortOption('name'); setSortMenuVisible(false); }}>
-            <Text style={styles.sortOption}>Sortuj: Nazwa</Text>
+          {['name', 'profit', 'value'].map((option) => (
+            <Pressable key={option} onPress={() => {
+              setSortOption(option as any);
+              setSortMenuVisible(false);
+            }}>
+              <Text style={styles.sortOption}>Sortuj: {option === 'name' ? 'Nazwa' : option === 'profit' ? 'Zysk' : 'Wartość'}</Text>
             </Pressable>
-            <Pressable onPress={() => { setSortOption('profit'); setSortMenuVisible(false); }}>
-            <Text style={styles.sortOption}>Sortuj: Zysk</Text>
-            </Pressable>
-            <Pressable onPress={() => { setSortOption('value'); setSortMenuVisible(false); }}>
-            <Text style={styles.sortOption}>Sortuj: Wartość</Text>
-            </Pressable>
+          ))}
         </View>
-        )}
+      )}
+
       {loading ? (
         <ActivityIndicator size="large" color="#ffffff" />
       ) : portfolio.length === 0 ? (
@@ -113,8 +80,11 @@ export default function PortfolioScreen() {
                   <Text style={styles.text}>
                     {item.shares} szt. @ ${item.avgPrice.toFixed(6)}
                   </Text>
-                  <Text style={[styles.text, { color: 'lightgreen' }, { fontWeight: 'bold' }]}>
-                    ${Math.abs(item.shares * item.avgPrice).toFixed(2)}
+                  <Text style={styles.text}>
+                    💵 Zainwestowano:{' '}
+                    <Text style={[styles.text, { color: 'lightgreen' }]}>
+                      ${Math.abs(item.shares * item.avgPrice).toFixed(2)}
+                    </Text>
                   </Text>
                   {item.currentPrice !== null ? (
                     <>
@@ -124,6 +94,7 @@ export default function PortfolioScreen() {
                           style={[
                             styles.profit,
                             { color: profit >= 0 ? '#88ff88' : 'red' },
+                            { fontWeight: 'bold' },
                           ]}
                         >
                           {profit >= 0 ? '📈' : '📉'} {profit.toFixed(2)} USD ({profitPercent.toFixed(1)}%)
