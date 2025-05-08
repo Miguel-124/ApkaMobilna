@@ -1,22 +1,18 @@
-//app/login.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
-
-import { useEffect } from 'react';
+import * as Google from 'expo-auth-session/providers/google';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
-import { useAuthStore, AuthState } from '../lib/storage/auth';
+import { useAuthStore } from '../lib/storage/auth';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
-  const setUser = useAuthStore((state: AuthState) => state.setUser);
+  const setUser = useAuthStore((state) => state.setUser);
 
-  // 🔧 Ręcznie tworzony redirect URI przez Expo proxy
   const redirectUri = AuthSession.makeRedirectUri({
     useProxy: true,
   } as any);
@@ -24,9 +20,8 @@ export default function LoginScreen() {
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: Constants.expoConfig?.extra?.expoClientId,
     iosClientId: Constants.expoConfig?.extra?.iosClientId,
-    androidClientId: Constants.expoConfig?.extra?.androidClientId,
     webClientId: Constants.expoConfig?.extra?.webClientId,
-    redirectUri, // ⬅️ to naprawia błąd 400
+    redirectUri,
     extraParams: {
       prompt: 'select_account',
       access_type: 'offline',
@@ -35,23 +30,22 @@ export default function LoginScreen() {
   });
 
   useEffect(() => {
-    const fetchUserInfo = async (token: string) => {
-      const res = await fetch('https://www.googleapis.com/userinfo/v2/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const userInfo = await res.json();
-      setUser({
-        name: userInfo.name,
-        email: userInfo.email,
-        accessToken: token,
-      });
-      router.replace('/homeScreen');
-    };
-
     if (response?.type === 'success') {
+      console.log('Redirect URI:', redirectUri);
       const { authentication } = response;
       if (authentication?.accessToken) {
-        fetchUserInfo(authentication.accessToken);
+        fetch('https://www.googleapis.com/userinfo/v2/me', {
+          headers: { Authorization: `Bearer ${authentication.accessToken}` },
+        })
+          .then((res) => res.json())
+          .then((userInfo) => {
+            setUser({
+              name: userInfo.name,
+              email: userInfo.email,
+              accessToken: authentication.accessToken,
+            });
+            router.replace('/homeScreen');
+          });
       }
     }
   }, [response]);
@@ -61,15 +55,29 @@ export default function LoginScreen() {
       <Image source={require('../assets/images/logo_SmartInwestor.jpeg')} style={styles.logo} />
       <Text style={styles.title}>SmartInwestor</Text>
       <Text style={styles.description}>
-        Monitoruj swój portfel inwestycyjny w czasie rzeczywistym. 
-        Zyskaj pełną kontrolę nad swoimi aktywami i decyzjami finansowymi.
+        Monitoruj swój portfel inwestycyjny w czasie rzeczywistym. Zyskaj pełną kontrolę nad swoimi aktywami.
       </Text>
+
       <TouchableOpacity
         style={styles.button}
         onPress={() => promptAsync()}
         disabled={!request}
       >
         <Text style={styles.buttonText}>Zaloguj przez Google</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.skipButton}
+        onPress={() => {
+          setUser({
+            name: 'Gość',
+            email: 'guest@smartinwestor.app',
+            accessToken: 'guest-token',
+          });
+          router.replace('/homeScreen');
+        }}
+      >
+        <Text style={styles.skipButtonText}>Zaloguj jako gość</Text>
       </TouchableOpacity>
     </View>
   );
@@ -112,5 +120,16 @@ const styles = StyleSheet.create({
     color: '#121212',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  skipButton: {
+    marginTop: 20,
+    backgroundColor: '#333',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  skipButtonText: {
+    color: '#ccc',
+    fontSize: 14,
   },
 });

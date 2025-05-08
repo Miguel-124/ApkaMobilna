@@ -1,11 +1,11 @@
-// app/index.tsx
 import React, { useState, useCallback, forwardRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Dimensions, TouchableOpacityProps } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { PieChart } from 'react-native-chart-kit';
 import { getTransactions } from '../lib/storage/transactions';
 import { getPortfolioFromTransactions } from '../lib/services/portfolio';
 import { useFocusEffect } from '@react-navigation/native';
+import { useAuthStore } from '../lib/storage/auth';
 
 type PortfolioItem = {
   ticker: string;
@@ -14,21 +14,24 @@ type PortfolioItem = {
 };
 
 type Props = {
-    title: string;
-    style?: any;
-  } & TouchableOpacityProps;
+  title: string;
+  style?: any;
+} & TouchableOpacityProps;
 
-const CustomButton = forwardRef<React.ElementRef<typeof TouchableOpacity>, Props>(({ title, style, ...props }, ref) => {
+const CustomButton = forwardRef<React.ElementRef<typeof TouchableOpacity>, Props>(
+  ({ title, style, ...props }, ref) => {
     return (
       <TouchableOpacity ref={ref} style={[styles.customButton, style]} {...props}>
         <Text style={styles.customButtonText}>{title}</Text>
       </TouchableOpacity>
     );
-  });
-
+  }
+);
 
 export default function Index() {
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
 
   useFocusEffect(
     useCallback(() => {
@@ -46,16 +49,15 @@ export default function Index() {
     0
   );
 
-  // Przygotowanie danych do wykresu
   const pieData = portfolio.map((asset) => {
-    const value = asset.shares * asset.avgPrice;  // Wartość aktywa
+    const value = asset.shares * asset.avgPrice;
     const percent = totalValue > 0 ? (value / totalValue) * 100 : 0;
-    
+
     return {
-      name: asset.ticker,            // Tekst w legendzie
-      population: percent,           // Używane do obliczeń w PieChart
-      color: getColor(asset.ticker), // Kolor aktywa
-      legendFontColor: '#00FFFF',    // Neonowy cyjan
+      name: asset.ticker,
+      population: percent,
+      color: getColor(asset.ticker),
+      legendFontColor: '#00FFFF',
       legendFontSize: 14,
     };
   });
@@ -70,7 +72,7 @@ export default function Index() {
       <Text style={styles.subtitle}>
         Wartość portfela: ${totalValue.toFixed(2)}
       </Text>
-  
+
       {portfolio.length > 0 ? (
         <View style={styles.chartContainer}>
           <PieChart
@@ -78,18 +80,18 @@ export default function Index() {
             width={Dimensions.get('window').width - 32}
             height={240}
             chartConfig={chartConfig}
-            accessor="population" // klucz w obiekcie (pieData) używany do obliczeń
+            accessor="population"
             backgroundColor="transparent"
             paddingLeft="15"
             center={[0, 0]}
-            absolute={false}     // false => wyświetla % w segmentach
+            absolute={false}
             style={styles.chart}
           />
         </View>
       ) : (
         <Text style={styles.noData}>Brak danych do wykresu</Text>
       )}
-  
+
       <View style={styles.buttonContainer}>
         <Link href="/portfolio" asChild>
           <CustomButton title="Zobacz portfolio" />
@@ -101,28 +103,35 @@ export default function Index() {
           <CustomButton title="Historia transakcji" />
         </Link>
       </View>
+
+      <TouchableOpacity
+        onPress={() => {
+          logout();
+          router.replace('/login');
+        }}
+        style={styles.logoutButton}
+      >
+        <Text style={styles.logoutButtonText}>Wyloguj</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
-/** Ustawienia stylu i kolorów wykresu */
 const chartConfig = {
-  backgroundGradientFrom: '#0F2027',   // Początek gradientu
-  backgroundGradientTo: '#2C5364',     // Koniec gradientu
-  color: (opacity = 1) => `rgba(0, 255, 255, ${opacity})`,  // Neonowy cyjan
+  backgroundGradientFrom: '#0F2027',
+  backgroundGradientTo: '#2C5364',
+  color: (opacity = 1) => `rgba(0, 255, 255, ${opacity})`,
   labelColor: (opacity = 1) => `rgba(0, 255, 255, ${opacity})`,
   strokeWidth: 2,
   useShadowColorFromDataset: false,
 };
 
-/** Tablica kolorów do przydzielania segmentom */
 const colorPalette = [
   '#4CAF50', '#2196F3', '#FF9800', '#9C27B0',
   '#E91E63', '#00BCD4', '#CDDC39', '#FF5722',
   '#3F51B5', '#795548', '#009688', '#8BC34A',
 ];
 
-/** Mapa zapamiętująca, jaki ticker ma jaki kolor */
 const colorMap = new Map<string, string>();
 
 function getColor(ticker: string) {
@@ -133,7 +142,6 @@ function getColor(ticker: string) {
   return colorMap.get(ticker)!;
 }
 
-/** Style ekranu i poszczególnych komponentów */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -155,7 +163,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 8,
-    color: '#00FFFF', // Neonowy cyjan
+    color: '#00FFFF',
     textShadowColor: '#00FFFF',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
@@ -167,18 +175,17 @@ const styles = StyleSheet.create({
     color: '#CCCCCC',
   },
   chartContainer: {
-    // Kontener z "neonowym" efektem wokół wykresu
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: -18,
-    backgroundColor: '#0a1a1a', // Ciemne tło pod wykres
-    borderRadius: 50,         // Duży promień => okrąg
+    backgroundColor: '#0a1a1a',
+    borderRadius: 50,
     padding: 20,
     shadowColor: '#00FFFF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 10,
-    elevation: 10, // Dla Androida
+    elevation: 10,
   },
   chart: {
     margin: -18,
@@ -206,5 +213,17 @@ const styles = StyleSheet.create({
     color: '#00FFFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  logoutButton: {
+    marginTop: 32,
+    alignSelf: 'center',
+    backgroundColor: '#333',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  logoutButtonText: {
+    color: '#ccc',
+    fontSize: 14,
   },
 });
