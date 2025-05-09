@@ -1,7 +1,7 @@
 // app/transactionsHistory.tsx
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Alert, Pressable } from 'react-native';
-import { getTransactions, deleteTransaction } from '../lib/storage/transactions';
+import { getTransactions, deleteTransactionById } from '../lib/storage/transactions';
 import moment from 'moment';
 
 type Transaction = {
@@ -35,7 +35,7 @@ export default function TransactionsScreen() {
           text: 'Usuń',
           style: 'destructive',
           onPress: async () => {
-            await deleteTransaction(id);
+            await deleteTransactionById(id);
             load(); // odśwież listę
           },
         },
